@@ -1,14 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="https://fonts.xz.style/serve/inter.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Directory</title>
+    <!-- Lucian Sales wuz here! --!>
+  <!-- new.css Framework -->
+  <link rel="stylesheet" href="https://fonts.xz.style/serve/inter.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
+
+  <style>
+    .button-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    .button-grid button {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .status-msg {
+      font-style: italic;
+      color: #666;
+    }
+  </style>
 </head>
 <body>
-    <header> this is a test!</header>
-    <body> if you see this, it's working! </body>
+  <header>
+    <h1>App Directory</h1>
+    <p>Select any application below to launch it.</p>
+  </header>
+
+  <main>
+    <div id="app-container" class="button-grid">
+      <span class="status-msg">Scanning repository for HTML pages...</span>
+    </div>
+  </main>
+
+  <script>
+    (async function scanRepository() {
+      const container = document.getElementById('app-container');
+      const owner = 'Light10198';
+      const repo = 'testwebsite.github.io';
+      const endpoint = `https://api.github.com/repos/${owner}/${repo}/contents/`;
+
+      try {
+        const response = await fetch(endpoint, {
+          headers: {
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`GitHub API returned status ${response.status}`);
+        }
+
+        const items = await response.json();
+
+        // Filter: keep only .html files, exclude index.html and 404.html
+        const ignoredFiles = new Set(['index.html', '404.html']);
+        const htmlPages = items.filter(item => 
+          item.type === 'file' &&
+          item.name.toLowerCase().endsWith('.html') &&
+          !ignoredFiles.has(item.name.toLowerCase())
+        );
+
+        container.innerHTML = '';
+
+        if (htmlPages.length === 0) {
+          container.innerHTML = '<p class="status-msg">No sub-pages currently found in the root directory.</p>';
+          return;
+        }
+
+        // Generate styled button for each discovered HTML page
+        htmlPages.forEach(file => {
+          const button = document.createElement('button');
+          
+          // Strip extension for the button label ('Example App2.html' -> 'Example App2')
+          const displayName = file.name.replace(/\.html$/i, '');
+          button.textContent = displayName;
+
+          // Safe URI encoding handles spaces and special characters
+          button.addEventListener('click', () => {
+            window.location.href = encodeURI(file.name);
+          });
+
+          container.appendChild(button);
+        });
+
+      } catch (err) {
+        console.error('Error fetching file list:', err);
+        container.innerHTML = `
+          <p style="color: #c00;">
+            Unable to load page list automatically (${err.message}).
+            <br>
+            <small>Note: Unauthenticated GitHub API calls are limited to 60 requests per hour per IP.</small>
+          </p>`;
+      }
+    })();
+  </script>
 </body>
 </html>
