@@ -4,17 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Application Directory</title>
-    <!-- Lucian Sales wuz here! --!>
+
   <!-- new.css Framework -->
   <link rel="stylesheet" href="https://fonts.xz.style/serve/inter.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
 
   <style>
+    .section-container {
+      margin-bottom: 2rem;
+    }
     .button-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 0.75rem;
-      margin-top: 1.5rem;
+      margin-top: 0.75rem;
     }
     .button-grid button {
       cursor: pointer;
@@ -34,14 +37,12 @@
     <p>Select any application below to launch it.</p>
   </header>
 
-  <main>
-    <div id="app-container" class="button-grid">
-      <span class="status-msg">Scanning repository for HTML pages...</span>
-    </div>
+  <main id="app-container">
+    <p class="status-msg">Scanning repository for categorized HTML pages...</p>
   </main>
 
   <script>
-    (async function scanRepository() {
+    (async function scanAndCategorizeRepository() {
       const container = document.getElementById('app-container');
       const owner = 'Light10198';
       const repo = 'testwebsite.github.io';
@@ -60,7 +61,7 @@
 
         const items = await response.json();
 
-        // Filter: keep only .html files, exclude index.html and 404.html
+        // Filter: Keep only .html files, excluding directory and error handlers
         const ignoredFiles = new Set(['index.html', '404.html']);
         const htmlPages = items.filter(item => 
           item.type === 'file' &&
@@ -75,20 +76,72 @@
           return;
         }
 
-        // Generate styled button for each discovered HTML page
-        htmlPages.forEach(file => {
-          const button = document.createElement('button');
-          
-          // Strip extension for the button label ('Example App2.html' -> 'Example App2')
-          const displayName = file.name.replace(/\.html$/i, '');
-          button.textContent = displayName;
+        // Pattern to match "(section: <name>)" case-insensitively
+        const sectionRegex = /\s*\(\s*section:\s*([^)]+)\s*\)/i;
 
-          // Safe URI encoding handles spaces and special characters
-          button.addEventListener('click', () => {
-            window.location.href = encodeURI(file.name);
+        // Group files by extracted section name
+        const sections = {};
+
+        htmlPages.forEach(file => {
+          const rawName = file.name.replace(/\.html$/i, '');
+          const match = rawName.match(sectionRegex);
+
+          let sectionName = 'General';
+          let displayName = rawName;
+
+          if (match) {
+            sectionName = match[1].trim();
+            // Remove the (section: ...) tag from the button label
+            displayName = rawName.replace(match[0], '').trim();
+          }
+
+          if (!sections[sectionName]) {
+            sections[sectionName] = [];
+          }
+
+          sections[sectionName].push({
+            displayName: displayName || rawName,
+            fileName: file.name
+          });
+        });
+
+        // Sort section titles alphabetically, putting "General" last if present
+        const sortedSectionNames = Object.keys(sections).sort((a, b) => {
+          if (a === 'General') return 1;
+          if (b === 'General') return -1;
+          return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+        });
+
+        // Render each section with an h2 header and a button grid
+        sortedSectionNames.forEach(sectionTitle => {
+          const sectionEl = document.createElement('section');
+          sectionEl.className = 'section-container';
+
+          const heading = document.createElement('h2');
+          heading.textContent = sectionTitle;
+          sectionEl.appendChild(heading);
+
+          const grid = document.createElement('div');
+          grid.className = 'button-grid';
+
+          // Sort items alphabetically inside each section
+          sections[sectionTitle].sort((a, b) => 
+            a.displayName.localeCompare(b.displayName, undefined, { numeric: true, sensitivity: 'base' })
+          );
+
+          sections[sectionTitle].forEach(page => {
+            const button = document.createElement('button');
+            button.textContent = page.displayName;
+
+            button.addEventListener('click', () => {
+              window.location.href = encodeURI(page.fileName);
+            });
+
+            grid.appendChild(button);
           });
 
-          container.appendChild(button);
+          sectionEl.appendChild(grid);
+          container.appendChild(sectionEl);
         });
 
       } catch (err) {
