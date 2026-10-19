@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Example, Again</title>
+<style>
+  :root {
+    --bg: #07060f;
+    --fg: #f5f3ff;
+    --a: #7c3aed;
+    --b: #06b6d4;
+    --c: #f472b6;
+    color-scheme: dark;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f6f4ff;
+      --fg: #1b1233;
+      --a: #6d28d9;
+      --b: #0891b2;
+      --c: #db2777;
+      color-scheme: light;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f4ff;
+    --fg: #1b1233;
+    --a: #6d28d9;
+    --b: #0891b2;
+    --c: #db2777;
+    color-scheme: light;
+  }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.55;
+    animation: drift 14s ease-in-out infinite alternate;
+  }
+  .o1 { width: 45vmax; height: 45vmax; background: var(--a); top: -12vmax; left: -10vmax; }
+  .o2 { width: 40vmax; height: 40vmax; background: var(--b); bottom: -14vmax; right: -8vmax; animation-delay: -5s; }
+  .o3 { width: 28vmax; height: 28vmax; background: var(--c); top: 40%; left: 50%; animation-delay: -9s; }
+  @keyframes drift {
+    from { transform: translate(0, 0) scale(1); }
+    to   { transform: translate(6vmax, -4vmax) scale(1.2); }
+  }
+  h1 {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    padding: 0 1rem;
+    text-align: center;
+    font-size: clamp(2rem, 8vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(110deg, var(--a), var(--b), var(--c), var(--a));
+    background-size: 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: shine 6s linear infinite;
+    text-shadow: 0 0 40px rgba(124, 58, 237, 0.25);
+  }
+  @keyframes shine {
+    to { background-position: 250% 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .orb, h1 { animation: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="orb o1"></div>
+  <div class="orb o2"></div>
+  <div class="orb o3"></div>
+  <h1>This is an example again but like cooler</h1>
+</body>
+</html>
